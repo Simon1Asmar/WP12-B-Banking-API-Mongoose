@@ -1,6 +1,111 @@
 import STATUS_CODE from "../constants/statusCodes.js";
-import { readUsersFromFile, writeUsersToFile } from "../models/bankingModel.js";
+import User from "../models/userModel.js";
 
+// @des     Create a new user
+// @route   POST api/v1/banking/users
+// @access  Public
+export const createUser = async (req, res, next) => {
+  try {
+    const body = req.body;
+
+    const user = await User.create(body);
+
+    res.status(STATUS_CODE.CREATED).send(user);
+    
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Delete User
+// @route   DELETE api/v1/banking/users/:id
+// @access  Public
+export const deleteUser = async (req, res, next) => {
+  try {
+    res.send("DELETE USER");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Deposit money
+// @route   PATCH api/v1/banking/users/:id/deposit
+// @access  Public
+export const depositMoney = async (req, res, next) => {
+  try {
+    res.send("DEPOSIT MONEY");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Gets list of all users with X amount of cash
+// @route   GET api/v1/banking/users/filter/cash/:amount
+// @access  Public
+export const filterByAmountOfCash = async (req, res, next) => {
+  try {
+    res.send("FILTER BY CASH");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Get all the users
+// @route   GET api/v1/banking/users
+// @access  Public
+export const getAllUsers = async (req, res, next) => {
+  try {
+    res.send("GET ALL USERS");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Get a certain user
+// @route   GET api/v1/banking/users/:id
+// @access  Public
+export const getUserById = async (req, res, next) => {
+  try {
+    res.send("GET USER BY ID");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Money transaction between two users
+// @route   PATCH api/v1/banking/users/:from/transact/:to
+// @access  Public
+export const transactMoney = async (req, res, next) => {
+  try {
+    res.send("TRANSACT BETWEEN USERS");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Update user credit
+// @route   PATCH api/v1/banking/users/:id/credit
+// @access  Public
+export const updateUserCredit = async (req, res, next) => {
+  try {
+    res.send("UPDATE USER CREDIT");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @des     Update user Status
+// @route   PATCH api/v1/banking/users/:id/active
+// @access  Public
+export const updateUserStatus = async (req, res, next) => {
+  try {
+    res.send("UPDATE USER STATUS");
+  } catch (error) {
+    next(error);
+  }
+};
+
+/*
 // @des     Get all the users
 // @route   GET api/v1/banking/users
 // @access  Public
@@ -305,3 +410,4 @@ export const updateUserStatus = async (req, res, next) => {
         next(error)
       }
     }
+    */

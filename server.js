@@ -3,6 +3,10 @@ import express from "express";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
 import bankingRoutes from "./routes/bankingRoutes.js"
 import cors from "cors"
+import connectDB from "./config/db.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
@@ -20,6 +24,9 @@ app.use("/api/v1/banking", bankingRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>{
-  console.log(`Server is running on PORT:${PORT}...`);
-})
+
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is listening on port:${PORT}...`);
+  });
+});
