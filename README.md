@@ -1,10 +1,10 @@
 # Banking System API
 
-Welcome to the Banking System API! This API provides a set of endpoints to interact with a banking system, allowing you to perform various operations related to accounts, transactions, and user management.
+Welcome to the Banking System API! This API provides a set of endpoints to interact with a banking system connected to a mongo database using mongoose, allowing you to perform various operations related to accounts, transactions, and user management.
 
 ## API Base URL
 
-[https://banking-system-api-mt6q.onrender.com/api/v1/banking](https://banking-system-api-mt6q.onrender.com/api/v1/banking)
+[hhttps://banking-system-api-with-mongo.onrender.com/api/v1/banking](https://banking-system-api-with-mongo.onrender.com/api/v1/banking)
 
 ## API Endpoints
 
