@@ -4,7 +4,7 @@ Welcome to the Banking System API! This API provides a set of endpoints to inter
 
 ## API Base URL
 
-[hhttps://banking-system-api-with-mongo.onrender.com/api/v1/banking](https://banking-system-api-with-mongo.onrender.com/api/v1/banking)
+[https://banking-system-api-with-mongo.onrender.com/api/v1/banking](https://banking-system-api-with-mongo.onrender.com/api/v1/banking)
 
 ## API Endpoints
 
