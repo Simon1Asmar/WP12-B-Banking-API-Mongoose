@@ -11,7 +11,6 @@ export const createUser = async (req, res, next) => {
     const user = await User.create(body);
 
     res.status(STATUS_CODE.CREATED).send(user);
-    
   } catch (error) {
     next(error);
   }
@@ -22,7 +21,16 @@ export const createUser = async (req, res, next) => {
 // @access  Public
 export const deleteUser = async (req, res, next) => {
   try {
-    res.send("DELETE USER");
+    const { id } = req.params;
+
+    const userToDelete = await User.findByIdAndDelete(id);
+
+    if (!userToDelete) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error(`Delete failed - user with id:${id} does not exist`);
+    }
+
+    res.status(STATUS_CODE.OK).send(`Successfully deleted user with id:${id}`);
   } catch (error) {
     next(error);
   }
@@ -33,7 +41,35 @@ export const deleteUser = async (req, res, next) => {
 // @access  Public
 export const depositMoney = async (req, res, next) => {
   try {
-    res.send("DEPOSIT MONEY");
+    // Get id from params
+    const { id } = req.params;
+
+    // Get cash amount from request body
+    const { cash } = req.body;
+
+    // get user from database
+    const user = await User.findById(id);
+
+    // check if user exists
+    if (!user) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error(`User with id:${id} does not exist`);
+    }
+
+    // check if user is not active
+    if (!user.isActive) {
+      res.status(STATUS_CODE.FORBIDDEN);
+      throw new Error(`Failed to deposit money - user is not active`);
+    }
+
+    // update user cash (old amount + new deposited amount from body)
+    await User.findByIdAndUpdate(
+      id,
+      { $set: { cash: user.cash + cash } },
+      { new: true }
+    );
+
+    res.status(STATUS_CODE.OK).send(`Successfully deposited $${cash}`);
   } catch (error) {
     next(error);
   }
@@ -44,7 +80,41 @@ export const depositMoney = async (req, res, next) => {
 // @access  Public
 export const filterByAmountOfCash = async (req, res, next) => {
   try {
-    res.send("FILTER BY CASH");
+    // Get cash amount from params
+    const { amount } = req.params;
+
+    // get filter types from body
+    const { isGreaterThan, andEqual } = req.body;
+
+    // validate if cash amount is a number
+    if (isNaN(amount)) {
+      res.status(STATUS_CODE.FORBIDDEN);
+      throw new Error("Failed - Must enter a valid cash amount");
+    }
+
+    let cashSearchQuery = {};
+
+    // gt : isGreaterThan !andEqual
+    // gte: isGreaterThan andEqual
+    if (isGreaterThan) {
+      if (andEqual) {
+        cashSearchQuery = { cash: { $gte: amount } };
+      } else {
+        cashSearchQuery = { cash: { $gt: amount } };
+      }
+    } else {
+      // lt: !isGreaterThan !andEqual
+      // lte: !isGreaterThan andEqual
+      if (andEqual) {
+        cashSearchQuery = { cash: { $lte: amount } };
+      } else {
+        cashSearchQuery = { cash: { $lt: amount } };
+      }
+    }
+
+    const users = await User.find(cashSearchQuery);
+
+    res.send(users);
   } catch (error) {
     next(error);
   }
@@ -55,7 +125,9 @@ export const filterByAmountOfCash = async (req, res, next) => {
 // @access  Public
 export const getAllUsers = async (req, res, next) => {
   try {
-    res.send("GET ALL USERS");
+    const users = await User.find({});
+
+    res.send(users);
   } catch (error) {
     next(error);
   }
@@ -66,7 +138,16 @@ export const getAllUsers = async (req, res, next) => {
 // @access  Public
 export const getUserById = async (req, res, next) => {
   try {
-    res.send("GET USER BY ID");
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error(`User with id:${id} does not exist`);
+    }
+
+    res.status(STATUS_CODE.OK).send(user);
   } catch (error) {
     next(error);
   }
@@ -77,7 +158,72 @@ export const getUserById = async (req, res, next) => {
 // @access  Public
 export const transactMoney = async (req, res, next) => {
   try {
-    res.send("TRANSACT BETWEEN USERS");
+    // get the ids of the sender and reciever
+    const { from, to } = req.params;
+
+    // get cash amount from body
+    const { cash } = req.body;
+
+    // validate if cash amount is a number
+    if (isNaN(cash) || !cash) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("You must insert a valid cash amount to transact");
+    }
+
+    const sender = await User.findById(from);
+
+    const reciever = await User.findById(to);
+
+    if (!sender || !reciever) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("One or more users not found");
+    }
+
+    if (!sender.isActive || !reciever.isActive) {
+      res.status(STATUS_CODE.FORBIDDEN);
+      throw new Error("Transaction failed - both users must be active");
+    }
+
+    const maxAllowedToSend = sender.cash + sender.credit;
+
+    if (cash > maxAllowedToSend) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error(
+        "Transaction Failed - sender does not have enough cash and credit"
+      );
+    }
+
+    let deductedCash = 0;
+    let deductedCredit = 0;
+
+    if (cash <= sender.cash) {
+      deductedCash = cash;
+      deductedCredit = 0;
+    } else {
+      deductedCash = sender.cash;
+      deductedCredit = cash - sender.cash;
+    }
+
+    // update - take cash and credit from sender
+    await User.findByIdAndUpdate(
+      from,
+      {
+        $set: {
+          cash: sender.cash - deductedCash,
+          credit: sender.credit - deductedCredit,
+        },
+      },
+      { new: true }
+    );
+
+    // update - give cash to reciever
+    await User.findByIdAndUpdate(
+      to,
+      { $set: { cash: reciever.cash + cash } },
+      { new: true }
+    );
+
+    res.send(`successfully send ${cash} from ${sender.firstName} to ${reciever.firstName}`)
   } catch (error) {
     next(error);
   }
@@ -88,7 +234,35 @@ export const transactMoney = async (req, res, next) => {
 // @access  Public
 export const updateUserCredit = async (req, res, next) => {
   try {
-    res.send("UPDATE USER CREDIT");
+    // Get id from params
+    const { id } = req.params;
+
+    // Get credit amount from request body
+    const { credit } = req.body;
+
+    // get user from database
+    const user = await User.findById(id);
+
+    // check if user exists
+    if (!user) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error(`User with id:${id} does not exist`);
+    }
+
+    // check if user is not active
+    if (!user.isActive) {
+      res.status(STATUS_CODE.FORBIDDEN);
+      throw new Error(`Failed - user is not active`);
+    }
+
+    // update user credit (old amount + new credit amount from body)
+    await User.findByIdAndUpdate(
+      id,
+      { $set: { credit: user.credit + credit } },
+      { new: true }
+    );
+
+    res.status(STATUS_CODE.OK).send(`Successfully added credit:${credit}`);
   } catch (error) {
     next(error);
   }
@@ -99,7 +273,34 @@ export const updateUserCredit = async (req, res, next) => {
 // @access  Public
 export const updateUserStatus = async (req, res, next) => {
   try {
-    res.send("UPDATE USER STATUS");
+    // Get id from params
+    const { id } = req.params;
+
+    // get new isActive value from request body
+    const { isActive } = req.body;
+
+    // find user by id
+    const user = await User.findById(id);
+
+    // check if user does not exist
+    if (!user) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error(`User with id:${id} does not exist`);
+    }
+
+    // check if the isActive state of the user is equal to the isActive value sent in the request body
+    if (user.isActive === isActive) {
+      res.send(`User's isActive vlaue is already ${isActive}`);
+    }
+
+    // update isActive value
+    await User.findByIdAndUpdate(
+      id,
+      { $set: { isActive: isActive } },
+      { new: true }
+    );
+
+    res.status(STATUS_CODE.OK).send(`updated isActive value to ${isActive}`);
   } catch (error) {
     next(error);
   }

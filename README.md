@@ -16,7 +16,7 @@ Welcome to the Banking System API! This API provides a set of endpoints to inter
 | PATCH  | /users/:id/credit          | Update       | Update user credit.                           |
 | PATCH  | /users/:id/deposit         | Update       | Deposit money in user's account.              |
 | PATCH  | /users/:from/transact/:to  | Update       | Transfer money between two users.             |
-| DELETE | /users/:id                 | Delete       | Delete a user (if inactive).                  |
+| DELETE | /users/:id                 | Delete       | Delete a user                  |
 | PATCH  | /users/:id/active          | Update       | Update user account status (active/inactive). |
 | GET    | /users/filter/cash/:amount | Read         | Filter users by the amount of cash.           |
 
@@ -62,7 +62,7 @@ Welcome to the Banking System API! This API provides a set of endpoints to inter
 
    - Endpoint: `/users/:id`
    - Method: DELETE
-   - Description: Delete a user (if inactive).
+   - Description: Delete a user.
 
 8. **Update User Account Status:**
    - Endpoint: `/users/:id/active`
